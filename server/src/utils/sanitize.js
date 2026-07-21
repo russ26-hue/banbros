@@ -1,0 +1,82 @@
+const sanitizeHtml = require("sanitize-html");
+
+/**
+ * For fields that should NEVER contain any HTML at all
+ * (titles, names, short descriptions, contact form fields, etc).
+ * Strips all tags, keeps plain text only.
+ */
+function sanitizePlainText(input) {
+  if (typeof input !== "string") return input;
+  return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} }).trim();
+}
+
+/**
+ * For rich-text fields where basic formatting is expected
+ * (news article body, product long description).
+ * Allows a safe subset of formatting tags, strips everything else
+ * (scripts, event handlers, iframes, styles, etc).
+ */
+function sanitizeRichText(input) {
+  if (typeof input !== "string") return input;
+  return sanitizeHtml(input, {
+    allowedTags: [
+      "p",
+      "br",
+      "strong",
+      "em",
+      "u",
+      "s",
+      "ul",
+      "ol",
+      "li",
+      "h2",
+      "h3",
+      "h4",
+      "blockquote",
+      "a",
+      "img",
+    ],
+    allowedAttributes: {
+      a: ["href", "title", "target", "rel"],
+      img: ["src", "alt"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    // Force safe rel/target on links so sanitized content can't be used for tabnabbing
+    transformTags: {
+      a: sanitizeHtml.simpleTransform("a", {
+        rel: "noopener noreferrer nofollow",
+        target: "_blank",
+      }),
+    },
+  }).trim();
+}
+
+/**
+ * Sanitizes every string value in a flat array (e.g. product "features").
+ */
+function sanitizeStringArray(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map((item) =>
+    typeof item === "string" ? sanitizePlainText(item) : item,
+  );
+}
+
+/**
+ * Sanitizes every string value in a flat object (e.g. product "specs",
+ * or a CMS section's content object).
+ */
+function sanitizeObjectStrings(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = typeof value === "string" ? sanitizePlainText(value) : value;
+  }
+  return result;
+}
+
+module.exports = {
+  sanitizePlainText,
+  sanitizeRichText,
+  sanitizeStringArray,
+  sanitizeObjectStrings,
+};
