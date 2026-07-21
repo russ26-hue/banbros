@@ -3,7 +3,7 @@ const { body, validationResult } = require("express-validator");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { makeUploader, verifyImageContent } = require("../middleware/upload");
-const { sanitizePlainText } = require("../utils/sanitize");
+const { sanitizePlainText, sanitizeUrl } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
 
 const router = express.Router();
@@ -75,8 +75,16 @@ router.post(
       return res.status(400).json({ error: "Logo image is required." });
     }
 
-    const { name: rawName, websiteUrl, sortOrder, isActive } = req.body;
+    const {
+      name: rawName,
+      websiteUrl: rawWebsiteUrl,
+      sortOrder,
+      isActive,
+    } = req.body;
     const name = sanitizePlainText(rawName);
+    const websiteUrl = rawWebsiteUrl
+      ? sanitizeUrl(rawWebsiteUrl)
+      : rawWebsiteUrl;
     const logoUrl = toPublicUrl(req, req.file.filename);
 
     const result = await db.query(
@@ -118,7 +126,15 @@ router.put(
   verifyImageContent,
   async (req, res) => {
     const { id } = req.params;
-    const { name: rawName, websiteUrl, sortOrder, isActive } = req.body;
+    const {
+      name: rawName,
+      websiteUrl: rawWebsiteUrl,
+      sortOrder,
+      isActive,
+    } = req.body;
+    const websiteUrl = rawWebsiteUrl
+      ? sanitizeUrl(rawWebsiteUrl)
+      : rawWebsiteUrl;
 
     const existing = await db.query("SELECT * FROM brands WHERE id = $1", [id]);
     if (existing.rows.length === 0)

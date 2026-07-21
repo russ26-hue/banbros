@@ -19,7 +19,8 @@ const LOCKOUT_MINUTES = 15;
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 5,
+  skipSuccessfulRequests: true, // only count failed attempts toward the limit
   message: { error: "Too many login attempts. Please try again later." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -41,7 +42,7 @@ router.post(
     const { email, password } = req.body;
 
     const result = await db.query(
-      `SELECT id, name, email, password_hash, role, is_active,
+      `SELECT id, name, email, password_hash, role, is_active, token_version,
               failed_login_attempts, locked_until
        FROM users WHERE email = $1`,
       [email],
@@ -51,7 +52,15 @@ router.post(
     const genericError = () =>
       res.status(401).json({ error: "Invalid email or password." });
 
+    // Dummy hash with the same bcrypt cost factor (10) used for real users.
+    // Comparing against this when no user is found keeps response timing
+    // consistent with a real "wrong password" case, so timing alone can't
+    // reveal whether an email address exists in the system.
+    const DUMMY_HASH =
+      "$2a$10$CwTycUXWue0Thq9StjUM0uJ8vHNRXqIvNzt5vQBQXymUYcLNXzr.a";
+
     if (!user || !user.is_active) {
+      await bcrypt.compare(password, DUMMY_HASH);
       await logAudit({
         userEmail: email,
         action: "login_failed",
@@ -120,7 +129,13 @@ router.post(
 
     const jti = crypto.randomUUID();
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, jti },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        tokenVersion: user.token_version,
+        jti,
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "8h" },
     );
@@ -186,10 +201,10 @@ router.put(
     }
 
     const newHash = await bcrypt.hash(newPassword, 10);
-    await db.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
-      newHash,
-      req.user.id,
-    ]);
+    await db.query(
+      "UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE id = $2",
+      [newHash, req.user.id],
+    );
 
     await logAudit({
       userId: req.user.id,

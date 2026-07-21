@@ -34,6 +34,7 @@ export default async function AdminLayout({ children }) {
     { label: "Brands", href: "/admin/brands" },
     { label: "News", href: "/admin/news" },
     { label: "Careers", href: "/admin/careers" },
+    { label: "Contact", href: "/admin/contact" },
     { label: "CMS Content", href: "/admin/cms" },
     ...(isSuperAdmin
       ? [{ label: "Admin Management", href: "/admin/users" }]

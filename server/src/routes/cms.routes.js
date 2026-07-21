@@ -1,7 +1,7 @@
 const express = require("express");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { sanitizeObjectStrings } = require("../utils/sanitize");
+const { deepSanitizeContent } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
 
 const router = express.Router();
@@ -34,7 +34,7 @@ router.put(
       });
     }
 
-    const content = sanitizeObjectStrings(rawContent);
+    const content = deepSanitizeContent(rawContent);
 
     const result = await db.query(
       `INSERT INTO cms_sections (page, section_key, content, updated_by)

@@ -1,5 +1,6 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
+const rateLimit = require("express-rate-limit");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const {
@@ -16,6 +17,12 @@ const { logAudit } = require("../utils/auditLog");
 
 const router = express.Router();
 const resumeUploader = makeDocumentUploader("resumes");
+
+const applyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: { error: "Too many submissions. Please try again later." },
+});
 
 function toResumeUrl(req, filename) {
   if (!filename) return null;
@@ -233,6 +240,7 @@ router.delete(
 // POST /api/careers/:id/apply - public, submits an application with resume upload
 router.post(
   "/:id/apply",
+  applyLimiter,
   resumeUploader.single("resume"),
   verifyDocumentContent,
   [body("applicantName").trim().notEmpty(), body("applicantEmail").isEmail()],

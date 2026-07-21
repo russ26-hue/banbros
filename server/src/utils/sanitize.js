@@ -74,9 +74,66 @@ function sanitizeObjectStrings(obj) {
   return result;
 }
 
+/**
+ * For fields that must be a safe, clickable URL (button links, website
+ * links, image URLs). Only allows http(s) links or relative paths like
+ * "/products" — rejects dangerous schemes like javascript: or data:,
+ * which look like harmless text but execute code when clicked.
+ * Returns an empty string if the input isn't a safe URL.
+ */
+function sanitizeUrl(input) {
+  if (typeof input !== "string") return input;
+  const trimmed = input.trim();
+  if (trimmed === "") return "";
+
+  // Relative paths (e.g. "/products") are always safe — they can't
+  // specify a dangerous scheme.
+  if (trimmed.startsWith("/")) return trimmed;
+
+  try {
+    const parsed = new URL(trimmed);
+    if (["http:", "https:", "mailto:"].includes(parsed.protocol)) {
+      return trimmed;
+    }
+    return "";
+  } catch (err) {
+    // Not a valid absolute URL and not a relative path — reject it
+    // rather than guessing what the admin meant.
+    return "";
+  }
+}
+
+/**
+ * Recursively sanitizes every string found anywhere inside an object or
+ * array, including nested arrays of objects (e.g. CMS hero content shaped
+ * like { slides: [{ title, buttonLink, imageUrl }, ...] }).
+ * Keys that look like they hold a URL (containing "url" or "link") are
+ * run through sanitizeUrl instead of sanitizePlainText, so links can't be
+ * hijacked with a javascript: scheme.
+ */
+function deepSanitizeContent(value, keyHint = "") {
+  if (typeof value === "string") {
+    const looksLikeUrl = /url|link/i.test(keyHint);
+    return looksLikeUrl ? sanitizeUrl(value) : sanitizePlainText(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => deepSanitizeContent(item, keyHint));
+  }
+  if (value && typeof value === "object") {
+    const result = {};
+    for (const [key, val] of Object.entries(value)) {
+      result[key] = deepSanitizeContent(val, key);
+    }
+    return result;
+  }
+  return value; // numbers, booleans, null pass through unchanged
+}
+
 module.exports = {
   sanitizePlainText,
   sanitizeRichText,
   sanitizeStringArray,
   sanitizeObjectStrings,
+  sanitizeUrl,
+  deepSanitizeContent,
 };

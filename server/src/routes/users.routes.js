@@ -99,7 +99,8 @@ router.patch(
     const result = await db.query(
       `UPDATE users SET
        name = COALESCE($1, name),
-       is_active = COALESCE($2, is_active)
+       is_active = COALESCE($2, is_active),
+       token_version = CASE WHEN $2 = FALSE THEN token_version + 1 ELSE token_version END
      WHERE id = $3
      RETURNING id, name, email, role, is_active, created_at`,
       [name ?? null, isActive ?? null, id],
@@ -149,7 +150,10 @@ router.delete("/:id", async (req, res) => {
       .json({ error: "Super Admin accounts cannot be removed." });
   }
 
-  await db.query("UPDATE users SET is_active = FALSE WHERE id = $1", [id]);
+  await db.query(
+    "UPDATE users SET is_active = FALSE, token_version = token_version + 1 WHERE id = $1",
+    [id],
+  );
 
   await logAudit({
     userId: req.user.id,

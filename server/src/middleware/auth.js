@@ -29,14 +29,37 @@ async function requireAuth(req, res, next) {
         [payload.jti],
       );
       if (revoked.rows.length > 0) {
-        return res
-          .status(401)
-          .json({
-            error: "This session has been logged out. Please log in again.",
-          });
+        return res.status(401).json({
+          error: "This session has been logged out. Please log in again.",
+        });
       }
     } catch (err) {
       console.error("Revocation check failed:", err.message);
+      return res.status(500).json({ error: "Internal server error." });
+    }
+  }
+
+  // Tokens issued before we added token_version won't have this claim —
+  // treat those as still valid; they'll expire naturally within their
+  // original lifetime. Only enforce the check when the claim is present.
+  if (payload.tokenVersion !== undefined) {
+    try {
+      const current = await db.query(
+        "SELECT token_version, is_active FROM users WHERE id = $1",
+        [payload.id],
+      );
+      const user = current.rows[0];
+      if (
+        !user ||
+        !user.is_active ||
+        user.token_version !== payload.tokenVersion
+      ) {
+        return res.status(401).json({
+          error: "This session is no longer valid. Please log in again.",
+        });
+      }
+    } catch (err) {
+      console.error("Token version check failed:", err.message);
       return res.status(500).json({ error: "Internal server error." });
     }
   }
