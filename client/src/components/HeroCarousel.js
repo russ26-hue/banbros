@@ -44,7 +44,7 @@ export default function HeroCarousel({ slides }) {
               <img
                 src={slide.imageUrl}
                 alt={slide.title || ""}
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             )}
             <div
