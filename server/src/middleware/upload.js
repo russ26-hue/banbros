@@ -145,10 +145,51 @@ function verifyDocumentContent(req, res, next) {
     });
 }
 
+/**
+ * Same idea as verifyImageContent, but for routes using upload.fields()
+ * instead of upload.single() — where multiple files may arrive across
+ * multiple named fields (e.g. one "image" plus several "gallery" files).
+ * req.files is an object of { fieldName: [file, ...] } in this case.
+ * If ANY file fails verification, the whole request is rejected and every
+ * uploaded file in the request is deleted, to avoid orphaned partial uploads.
+ */
+function verifyImageContentFields(req, res, next) {
+  if (!req.files) return next();
+
+  const allFiles = Object.values(req.files).flat();
+  if (allFiles.length === 0) return next();
+
+  Promise.all(
+    allFiles.map((file) =>
+      fromFile(file.path).then((detected) => ({ file, detected })),
+    ),
+  )
+    .then((results) => {
+      const invalid = results.some(
+        ({ detected }) => !detected || !ALLOWED_MIME.has(detected.mime),
+      );
+      if (invalid) {
+        allFiles.forEach((f) => fs.unlink(f.path, () => {}));
+        return res
+          .status(400)
+          .json({ error: "One or more uploaded files are not valid images." });
+      }
+      return next();
+    })
+    .catch((err) => {
+      allFiles.forEach((f) => fs.unlink(f.path, () => {}));
+      console.error("Image verification failed:", err.message);
+      return res
+        .status(400)
+        .json({ error: "Could not verify the uploaded files." });
+    });
+}
+
 module.exports = {
   makeUploader,
   makeDocumentUploader,
   verifyImageContent,
+  verifyImageContentFields,
   verifyDocumentContent,
   UPLOAD_ROOT,
 };

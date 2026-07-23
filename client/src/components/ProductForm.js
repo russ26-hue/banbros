@@ -26,6 +26,11 @@ export default function ProductForm({
   const [imageFile, setImageFile] = useState(null);
   const [existingImageUrl] = useState(initialData?.image_url || "");
 
+  const [keptGalleryUrls, setKeptGalleryUrls] = useState(
+    Array.isArray(initialData?.gallery) ? initialData.gallery : [],
+  );
+  const [newGalleryFiles, setNewGalleryFiles] = useState([]);
+
   const initialSpecs = initialData?.specs
     ? Object.entries(initialData.specs).map(([key, value]) => ({ key, value }))
     : [];
@@ -54,6 +59,18 @@ export default function ProductForm({
     setSpecs((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function removeExistingGalleryPhoto(url) {
+    setKeptGalleryUrls((prev) => prev.filter((u) => u !== url));
+  }
+
+  function addNewGalleryFiles(fileList) {
+    setNewGalleryFiles((prev) => [...prev, ...Array.from(fileList)]);
+  }
+
+  function removeNewGalleryFile(index) {
+    setNewGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setStatus("submitting");
@@ -79,6 +96,8 @@ export default function ProductForm({
     formData.append("specs", JSON.stringify(specsObject));
     formData.append("features", JSON.stringify(featuresArray));
     if (imageFile) formData.append("image", imageFile);
+    formData.append("existingGallery", JSON.stringify(keptGalleryUrls));
+    newGalleryFiles.forEach((file) => formData.append("gallery", file));
 
     const url =
       mode === "create"
@@ -163,7 +182,7 @@ export default function ProductForm({
 
       <div>
         <label className="block text-sm font-medium text-navy mb-1">
-          Image
+          Main Image
         </label>
         {existingImageUrl && !imageFile && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -177,6 +196,68 @@ export default function ProductForm({
           type="file"
           accept="image/*"
           onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+          className="w-full text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-navy mb-2">
+          Gallery{" "}
+          <span className="text-text-muted font-normal">
+            (additional photos)
+          </span>
+        </label>
+
+        {(keptGalleryUrls.length > 0 || newGalleryFiles.length > 0) && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
+            {keptGalleryUrls.map((url) => (
+              <div key={url} className="relative aspect-square group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={url}
+                  alt="Gallery photo"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeExistingGalleryPhoto(url)}
+                  className="absolute top-1 right-1 bg-red-600 text-white text-xs font-semibold w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            {newGalleryFiles.map((file, i) => (
+              <div key={i} className="relative aspect-square group">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt="New gallery photo"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                <span className="absolute bottom-1 left-1 bg-primary text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                  New
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeNewGalleryFile(i)}
+                  className="absolute top-1 right-1 bg-red-600 text-white text-xs font-semibold w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => {
+            addNewGalleryFiles(e.target.files);
+            e.target.value = "";
+          }}
           className="w-full text-sm"
         />
       </div>

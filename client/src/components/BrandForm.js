@@ -7,6 +7,9 @@ export default function BrandForm({ mode, initialData, brandId }) {
   const router = useRouter();
 
   const [name, setName] = useState(initialData?.name || "");
+  const [division, setDivision] = useState(
+    initialData?.division || "corporate",
+  );
   const [websiteUrl, setWebsiteUrl] = useState(initialData?.website_url || "");
   const [sortOrder, setSortOrder] = useState(initialData?.sort_order ?? 0);
   const [isActive, setIsActive] = useState(
@@ -25,6 +28,7 @@ export default function BrandForm({ mode, initialData, brandId }) {
 
     const formData = new FormData();
     formData.append("name", name);
+    formData.append("division", division);
     formData.append("websiteUrl", websiteUrl);
     formData.append("sortOrder", String(sortOrder));
     formData.append("isActive", isActive ? "true" : "false");
@@ -69,6 +73,23 @@ export default function BrandForm({ mode, initialData, brandId }) {
           onChange={(e) => setName(e.target.value)}
           className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-navy mb-1">
+          Division
+        </label>
+        <select
+          value={division}
+          onChange={(e) => setDivision(e.target.value)}
+          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+        >
+          <option value="corporate">Corporate</option>
+          <option value="commercial">Commercial</option>
+        </select>
+        <p className="text-xs text-text-muted mt-1">
+          Controls which group this logo appears in on the homepage.
+        </p>
       </div>
 
       <div>

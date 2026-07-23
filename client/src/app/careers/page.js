@@ -25,16 +25,18 @@ export default async function CareersPage() {
     <main>
       {/* Collage */}
       {collageImages.length > 0 && (
-        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          {collageImages.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={url}
-              alt={`Banbros team ${i + 1}`}
-              className="w-full aspect-square object-cover"
-            />
-          ))}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+            {collageImages.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={url}
+                alt={`Banbros team ${i + 1}`}
+                className="w-full aspect-square object-cover rounded-lg"
+              />
+            ))}
+          </div>
         </section>
       )}
 
@@ -45,11 +47,14 @@ export default async function CareersPage() {
             Who is Banbros Commercial Inc.
           </h2>
           <p className="text-text-muted leading-relaxed">
-            Banbros Commercial Inc. is a technology solutions provider dedicated
-            to delivering enterprise-grade hardware, components, and IT
-            infrastructure to businesses across the Philippines. We're a team
-            driven by performance, reliability, and a genuine passion for
-            helping our clients grow with the right technology behind them.
+            Founded in 1997, we are a leading IT distributor and solutions
+            provider in the Philippines, delivering cybersecurity, networking,
+            enterprise IT, power protection, and consumer business solutions. By
+            partnering with industry-leading brands, we provide innovative,
+            secure, and scalable technologies, backed by value-added services,
+            technical expertise, and business support that help businesses,
+            government institutions, and system integrators achieve growth and
+            accelerate digital transformation.
           </p>
         </div>
       </section>

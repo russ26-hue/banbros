@@ -19,7 +19,7 @@ function toPublicUrl(req, filename) {
 // GET /api/brands - active brands, ordered for homepage display
 router.get("/", async (req, res) => {
   const result = await db.query(
-    `SELECT id, name, logo_url, website_url
+    `SELECT id, name, logo_url, website_url, division
      FROM brands
      WHERE is_active = TRUE
      ORDER BY sort_order ASC, name ASC`,
@@ -80,16 +80,19 @@ router.post(
       websiteUrl: rawWebsiteUrl,
       sortOrder,
       isActive,
+      division,
     } = req.body;
     const name = sanitizePlainText(rawName);
     const websiteUrl = rawWebsiteUrl
       ? sanitizeUrl(rawWebsiteUrl)
       : rawWebsiteUrl;
     const logoUrl = toPublicUrl(req, req.file.filename);
+    const brandDivision =
+      division === "commercial" ? "commercial" : "corporate";
 
     const result = await db.query(
-      `INSERT INTO brands (name, logo_url, website_url, sort_order, is_active, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO brands (name, logo_url, website_url, sort_order, is_active, division, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         name,
@@ -97,6 +100,7 @@ router.post(
         websiteUrl || null,
         sortOrder ? Number(sortOrder) : 0,
         isActive !== "false",
+        brandDivision,
         req.user.id,
       ],
     );
@@ -131,6 +135,7 @@ router.put(
       websiteUrl: rawWebsiteUrl,
       sortOrder,
       isActive,
+      division,
     } = req.body;
     const websiteUrl = rawWebsiteUrl
       ? sanitizeUrl(rawWebsiteUrl)
@@ -147,8 +152,8 @@ router.put(
 
     const result = await db.query(
       `UPDATE brands SET
-       name = $1, logo_url = $2, website_url = $3, sort_order = $4, is_active = $5
-       WHERE id = $6
+       name = $1, logo_url = $2, website_url = $3, sort_order = $4, is_active = $5, division = $6
+       WHERE id = $7
        RETURNING *`,
       [
         name,
@@ -160,6 +165,9 @@ router.put(
         isActive !== undefined
           ? isActive !== "false"
           : existing.rows[0].is_active,
+        division === "commercial" || division === "corporate"
+          ? division
+          : existing.rows[0].division,
         id,
       ],
     );

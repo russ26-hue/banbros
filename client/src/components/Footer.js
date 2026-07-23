@@ -59,8 +59,8 @@ export default function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-3 text-sm">
-              <li>123 Business Ave, Makati City, Philippines</li>
-              <li>+63 2 1234 5678</li>
+              <li>32 Pilar Corner, Araullo, San Juan City, 1500 Metro Manila, Philippines</li>
+              <li>+63 928 727 3009</li>
               <li>info@banbros.com</li>
             </ul>
           </div>
@@ -75,7 +75,7 @@ export default function Footer() {
             </p>
 
             <a
-              href="#"
+              href="https://www.facebook.com/BanbrosCommercialIncorporated"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"

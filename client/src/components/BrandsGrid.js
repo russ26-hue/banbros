@@ -1,5 +1,43 @@
+function BrandRow({ brands }) {
+  if (!brands || brands.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
+      {brands.map((brand) => {
+        const logo = (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={brand.logo_url}
+            alt={brand.name}
+            className="max-h-20 w-auto mx-auto grayscale hover:grayscale-0 transition-all"
+          />
+        );
+
+        return brand.website_url ? (
+          <a
+            key={brand.id}
+            href={brand.website_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center p-4"
+          >
+            {logo}
+          </a>
+        ) : (
+          <div key={brand.id} className="flex items-center justify-center p-4">
+            {logo}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function BrandsGrid({ brands }) {
   if (!brands || brands.length === 0) return null;
+
+  const corporateBrands = brands.filter((b) => b.division === "corporate");
+  const commercialBrands = brands.filter((b) => b.division === "commercial");
 
   return (
     <section className="bg-white">
@@ -7,36 +45,13 @@ export default function BrandsGrid({ brands }) {
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-navy">Brands</h2>
         </div>
-        <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
-          {brands.map((brand) => {
-            const logo = (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={brand.logo_url}
-                alt={brand.name}
-                className="max-h-20 w-auto mx-auto grayscale hover:grayscale-0 transition-all"
-              />
-            );
 
-            return brand.website_url ? (
-              <a
-                key={brand.id}
-                href={brand.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center p-4"
-              >
-                {logo}
-              </a>
-            ) : (
-              <div
-                key={brand.id}
-                className="flex items-center justify-center p-4"
-              >
-                {logo}
-              </div>
-            );
-          })}
+        <div className="space-y-10">
+          <BrandRow brands={corporateBrands} />
+          {corporateBrands.length > 0 && commercialBrands.length > 0 && (
+            <div className="border-t border-border max-w-xs mx-auto" />
+          )}
+          <BrandRow brands={commercialBrands} />
         </div>
       </div>
     </section>

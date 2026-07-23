@@ -2,7 +2,10 @@ const express = require("express");
 const { body, validationResult } = require("express-validator");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { makeUploader, verifyImageContent } = require("../middleware/upload");
+const {
+  makeUploader,
+  verifyImageContentFields,
+} = require("../middleware/upload");
 const { uniqueSlug } = require("../utils/slug");
 const {
   sanitizePlainText,
@@ -140,8 +143,11 @@ router.post(
   "/",
   requireAuth,
   requireRole("admin", "super_admin"),
-  upload.single("image"),
-  verifyImageContent,
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "gallery", maxCount: 10 },
+  ]),
+  verifyImageContentFields,
   [body("title").trim().notEmpty(), body("categoryId").optional().isInt()],
   async (req, res) => {
     const errors = validationResult(req);
@@ -174,13 +180,16 @@ router.post(
       : [];
 
     const slug = await uniqueSlug(db, "products", title);
-    const imageUrl = toPublicUrl(req, req.file?.filename);
+    const imageFile = req.files?.image?.[0];
+    const galleryFiles = req.files?.gallery || [];
+    const imageUrl = toPublicUrl(req, imageFile?.filename);
+    const galleryUrls = galleryFiles.map((f) => toPublicUrl(req, f.filename));
 
     const result = await db.query(
       `INSERT INTO products
         (category_id, title, slug, short_desc, description, specs, features,
-         image_url, is_published, is_featured, meta_title, meta_description, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+         image_url, gallery, is_published, is_featured, meta_title, meta_description, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING *`,
       [
         categoryId || null,
@@ -191,6 +200,7 @@ router.post(
         parsedSpecs,
         parsedFeatures,
         imageUrl,
+        galleryUrls,
         isPublished !== "false",
         isFeatured === "true",
         metaTitle || null,
@@ -220,8 +230,11 @@ router.put(
   "/:id",
   requireAuth,
   requireRole("admin", "super_admin"),
-  upload.single("image"),
-  verifyImageContent,
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "gallery", maxCount: 10 },
+  ]),
+  verifyImageContentFields,
   async (req, res) => {
     const { id } = req.params;
     const {
@@ -235,6 +248,7 @@ router.put(
       isFeatured,
       metaTitle,
       metaDescription,
+      existingGallery,
     } = req.body;
 
     const title = rawTitle ? sanitizePlainText(rawTitle) : rawTitle;
@@ -256,16 +270,29 @@ router.put(
       slug = await uniqueSlug(db, "products", title, id);
     }
 
-    const imageUrl = req.file
-      ? toPublicUrl(req, req.file.filename)
+    const imageFile = req.files?.image?.[0];
+    const newGalleryFiles = req.files?.gallery || [];
+    const imageUrl = imageFile
+      ? toPublicUrl(req, imageFile.filename)
       : existing.rows[0].image_url;
+
+    // existingGallery (JSON array of URLs the admin chose to keep) lets the
+    // form communicate removals — any existing photo NOT in this list gets
+    // dropped, and newly uploaded gallery files are appended after it.
+    const keptGallery = existingGallery
+      ? sanitizeStringArray(JSON.parse(existingGallery))
+      : existing.rows[0].gallery;
+    const newGalleryUrls = newGalleryFiles.map((f) =>
+      toPublicUrl(req, f.filename),
+    );
+    const gallery = [...keptGallery, ...newGalleryUrls];
 
     const result = await db.query(
       `UPDATE products SET
        category_id = $1, title = $2, slug = $3, short_desc = $4, description = $5,
-       specs = $6, features = $7, image_url = $8, is_published = $9, is_featured = $10,
-       meta_title = $11, meta_description = $12
-     WHERE id = $13
+       specs = $6, features = $7, image_url = $8, gallery = $9, is_published = $10,
+       is_featured = $11, meta_title = $12, meta_description = $13
+     WHERE id = $14
      RETURNING *`,
       [
         categoryId || existing.rows[0].category_id,
@@ -280,6 +307,7 @@ router.put(
           ? sanitizeStringArray(JSON.parse(features))
           : existing.rows[0].features,
         imageUrl,
+        gallery,
         isPublished !== undefined
           ? isPublished !== "false"
           : existing.rows[0].is_published,

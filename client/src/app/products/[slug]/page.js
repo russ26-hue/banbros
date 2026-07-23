@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import ProductGallery from "@/components/ProductGallery";
 
 async function getProduct(slug) {
   const res = await fetch(
@@ -44,25 +45,15 @@ export default async function ProductDetailPage({ params }) {
   const specEntries =
     specs && typeof specs === "object" ? Object.entries(specs) : [];
   const hasFeatures = Array.isArray(features) && features.length > 0;
-  const hasGallery = Array.isArray(gallery) && gallery.length > 0;
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="aspect-[4/3] bg-surface rounded-xl overflow-hidden">
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-text-muted text-sm">
-              No image
-            </div>
-          )}
-        </div>
+        <ProductGallery
+          mainImageUrl={imageUrl}
+          gallery={gallery}
+          title={title}
+        />
 
         <div>
           {categoryName && (
@@ -105,23 +96,6 @@ export default async function ProductDetailPage({ params }) {
           )}
         </div>
       </div>
-
-      {hasGallery && (
-        <div className="mt-12">
-          <h2 className="text-lg font-semibold text-navy mb-4">Gallery</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {gallery.map((imgUrl, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={i}
-                src={imgUrl}
-                alt={`${title} gallery ${i + 1}`}
-                className="w-full aspect-square object-cover rounded-lg"
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </main>
   );
 }
