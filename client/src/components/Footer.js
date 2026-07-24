@@ -92,7 +92,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border mt-10 pt-6 text-sm text-center text-text-muted">
-          © {year} Banbros Inc. All rights reserved.
+          © {year} Banbros Commercial Inc. All rights reserved.
         </div>
       </div>
     </footer>

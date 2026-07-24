@@ -14,7 +14,7 @@ const nextConfig = {
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       // 'unsafe-inline' is needed for Next.js's own injected styles and any inline style={{}} usage.
       `style-src 'self' 'unsafe-inline'`,
-      `img-src 'self' data: ${apiOrigin}`,
+      `img-src 'self' data: blob: ${apiOrigin}`,
       `font-src 'self' data:`,
       `connect-src 'self' ${apiOrigin}`,
       `object-src 'none'`,

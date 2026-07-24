@@ -35,7 +35,7 @@ async function getFeaturedProducts() {
 }
 
 async function getLatestNews() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news?limit=3`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news?limit=4`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch latest news");

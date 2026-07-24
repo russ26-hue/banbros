@@ -46,7 +46,7 @@ export default async function CareersPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-navy mb-4">
             Who is Banbros Commercial Inc.
           </h2>
-          <p className="text-text-muted leading-relaxed">
+          <p className="text-text-muted leading-relaxed text-justify">
             Founded in 1997, we are a leading IT distributor and solutions
             provider in the Philippines, delivering cybersecurity, networking,
             enterprise IT, power protection, and consumer business solutions. By

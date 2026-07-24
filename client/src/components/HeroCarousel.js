@@ -29,7 +29,7 @@ export default function HeroCarousel({ slides }) {
 
   return (
     <section className="relative bg-white">
-      <div className="relative aspect-[16/9] sm:aspect-[32/9] w-full">
+      <div className="relative aspect-[16/9] sm:aspect-[8/3] w-full">
         {slides.map((slide, i) => (
           <div
             key={i}
