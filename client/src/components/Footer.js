@@ -28,6 +28,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/about"
+                  className="hover:text-primary transition-colors"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/products"
                   className="hover:text-primary transition-colors"
                 >
@@ -40,6 +48,14 @@ export default function Footer() {
                   className="hover:text-primary transition-colors"
                 >
                   News
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/careers"
+                  className="hover:text-primary transition-colors"
+                >
+                  Careers
                 </Link>
               </li>
               <li>
@@ -59,7 +75,10 @@ export default function Footer() {
               Contact Us
             </h4>
             <ul className="space-y-3 text-sm">
-              <li>32 Pilar Corner, Araullo, San Juan City, 1500 Metro Manila, Philippines</li>
+              <li>
+                32 Pilar Corner, Araullo, San Juan City, 1500 Metro Manila,
+                Philippines
+              </li>
               <li>+63 928 727 3009</li>
               <li>info@banbros.com</li>
             </ul>
