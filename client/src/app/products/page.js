@@ -14,9 +14,10 @@ async function getCategories() {
   return data.categories;
 }
 
-async function getProducts({ category, search, page }) {
+async function getProducts({ category, brand, search, page }) {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
+  if (brand) params.set("brand", brand);
   if (search) params.set("search", search);
   params.set("page", page || "1");
   params.set("limit", "12");
@@ -34,12 +35,13 @@ async function getProducts({ category, search, page }) {
 export default async function ProductsPage({ searchParams }) {
   const params = await searchParams;
   const category = params?.category || "";
+  const brand = params?.brand || "";
   const search = params?.search || "";
   const page = parseInt(params?.page || "1", 10);
 
   const [categories, productsData] = await Promise.all([
     getCategories(),
-    getProducts({ category, search, page }),
+    getProducts({ category, brand, search, page }),
   ]);
 
   const { products, total, limit } = productsData;
@@ -58,7 +60,9 @@ export default async function ProductsPage({ searchParams }) {
 
       {products.length === 0 ? (
         <p className="text-center text-text-muted py-16">
-          No products found. Try adjusting your search or filters.
+          {brand && !category && !search
+            ? "No products from this brand yet. Check back soon!"
+            : "No products found. Try adjusting your search or filters."}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -74,6 +78,7 @@ export default async function ProductsPage({ searchParams }) {
             (pageNum) => {
               const linkParams = new URLSearchParams();
               if (category) linkParams.set("category", category);
+              if (brand) linkParams.set("brand", brand);
               if (search) linkParams.set("search", search);
               if (pageNum > 1) linkParams.set("page", pageNum.toString());
               const href = `/products${linkParams.toString() ? `?${linkParams.toString()}` : ""}`;

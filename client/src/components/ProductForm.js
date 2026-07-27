@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function ProductForm({
   mode,
   categories,
+  brands,
   initialData,
   productId,
 }) {
@@ -17,6 +18,7 @@ export default function ProductForm({
     initialData?.description || "",
   );
   const [categoryId, setCategoryId] = useState(initialData?.category_id || "");
+  const [brandId, setBrandId] = useState(initialData?.brand_id || "");
   const [isFeatured, setIsFeatured] = useState(
     initialData?.is_featured || false,
   );
@@ -91,6 +93,7 @@ export default function ProductForm({
     formData.append("shortDesc", shortDesc);
     formData.append("description", description);
     if (categoryId) formData.append("categoryId", categoryId);
+    if (brandId) formData.append("brandId", brandId);
     formData.append("isFeatured", isFeatured ? "true" : "false");
     formData.append("isPublished", isPublished ? "true" : "false");
     formData.append("specs", JSON.stringify(specsObject));
@@ -178,6 +181,28 @@ export default function ProductForm({
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-navy mb-1">
+          Brand
+        </label>
+        <select
+          value={brandId}
+          onChange={(e) => setBrandId(e.target.value)}
+          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+        >
+          <option value="">No brand</option>
+          {brands.map((brand) => (
+            <option key={brand.id} value={brand.id}>
+              {brand.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-text-muted mt-1">
+          Lets visitors browse this brand's products by clicking its logo on the
+          homepage.
+        </p>
       </div>
 
       <div>

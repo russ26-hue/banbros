@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
 const { makeUploader, verifyImageContent } = require("../middleware/upload");
+const { uniqueSlug } = require("../utils/slug");
 const { sanitizePlainText, sanitizeUrl } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
 
@@ -19,7 +20,7 @@ function toPublicUrl(req, filename) {
 // GET /api/brands - active brands, ordered for homepage display
 router.get("/", async (req, res) => {
   const result = await db.query(
-    `SELECT id, name, logo_url, website_url, division
+    `SELECT id, name, slug, logo_url, website_url, division
      FROM brands
      WHERE is_active = TRUE
      ORDER BY sort_order ASC, name ASC`,
@@ -89,13 +90,15 @@ router.post(
     const logoUrl = toPublicUrl(req, req.file.filename);
     const brandDivision =
       division === "commercial" ? "commercial" : "corporate";
+    const slug = await uniqueSlug(db, "brands", name);
 
     const result = await db.query(
-      `INSERT INTO brands (name, logo_url, website_url, sort_order, is_active, division, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO brands (name, slug, logo_url, website_url, sort_order, is_active, division, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         name,
+        slug,
         logoUrl,
         websiteUrl || null,
         sortOrder ? Number(sortOrder) : 0,
@@ -150,13 +153,19 @@ router.put(
       ? toPublicUrl(req, req.file.filename)
       : existing.rows[0].logo_url;
 
+    let slug = existing.rows[0].slug;
+    if (name && name !== existing.rows[0].name) {
+      slug = await uniqueSlug(db, "brands", name, id);
+    }
+
     const result = await db.query(
       `UPDATE brands SET
-       name = $1, logo_url = $2, website_url = $3, sort_order = $4, is_active = $5, division = $6
-       WHERE id = $7
+       name = $1, slug = $2, logo_url = $3, website_url = $4, sort_order = $5, is_active = $6, division = $7
+       WHERE id = $8
        RETURNING *`,
       [
         name,
+        slug,
         logoUrl,
         websiteUrl ?? existing.rows[0].website_url,
         sortOrder !== undefined

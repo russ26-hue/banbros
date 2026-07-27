@@ -14,6 +14,15 @@ async function getCategories() {
   return data.categories;
 }
 
+async function getBrands() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/brands`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch brands");
+  const data = await res.json();
+  return data.brands;
+}
+
 async function getProduct(id) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
@@ -37,8 +46,9 @@ async function getProduct(id) {
 
 export default async function EditProductPage({ params }) {
   const { id } = await params;
-  const [categories, product] = await Promise.all([
+  const [categories, brands, product] = await Promise.all([
     getCategories(),
+    getBrands(),
     getProduct(id),
   ]);
 
@@ -50,6 +60,7 @@ export default async function EditProductPage({ params }) {
       <ProductForm
         mode="edit"
         categories={categories}
+        brands={brands}
         initialData={product}
         productId={id}
       />

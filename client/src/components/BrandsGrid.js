@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function BrandRow({ brands }) {
   if (!brands || brands.length === 0) return null;
 
@@ -13,20 +15,14 @@ function BrandRow({ brands }) {
           />
         );
 
-        return brand.website_url ? (
-          <a
+        return (
+          <Link
             key={brand.id}
-            href={brand.website_url}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`/products?brand=${brand.slug}`}
             className="flex items-center justify-center p-4"
           >
             {logo}
-          </a>
-        ) : (
-          <div key={brand.id} className="flex items-center justify-center p-4">
-            {logo}
-          </div>
+          </Link>
         );
       })}
     </div>

@@ -25,15 +25,19 @@ function toPublicUrl(req, filename) {
 
 // -------------------- PUBLIC ROUTES --------------------
 
-// GET /api/products?category=laptops&featured=true&search=pc&page=1&limit=12
+// GET /api/products?category=laptops&brand=ruckus&featured=true&search=pc&page=1&limit=12
 router.get("/", async (req, res) => {
-  const { category, featured, search, page = 1, limit = 12 } = req.query;
+  const { category, brand, featured, search, page = 1, limit = 12 } = req.query;
   const conditions = ["p.is_published = TRUE"];
   const params = [];
 
   if (category) {
     params.push(category);
     conditions.push(`c.slug = $${params.length}`);
+  }
+  if (brand) {
+    params.push(brand);
+    conditions.push(`b.slug = $${params.length}`);
   }
   if (featured === "true") {
     conditions.push("p.is_featured = TRUE");
@@ -54,9 +58,11 @@ router.get("/", async (req, res) => {
 
   const result = await db.query(
     `SELECT p.id, p.title, p.slug, p.short_desc, p.image_url, p.is_featured,
-            c.name AS category_name, c.slug AS category_slug
+            c.name AS category_name, c.slug AS category_slug,
+            b.name AS brand_name, b.slug AS brand_slug
      FROM products p
      LEFT JOIN product_categories c ON c.id = p.category_id
+     LEFT JOIN brands b ON b.id = p.brand_id
      ${whereClause}
      ORDER BY p.created_at DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -64,7 +70,10 @@ router.get("/", async (req, res) => {
   );
 
   const countResult = await db.query(
-    `SELECT COUNT(*) FROM products p LEFT JOIN product_categories c ON c.id = p.category_id ${whereClause}`,
+    `SELECT COUNT(*) FROM products p
+     LEFT JOIN product_categories c ON c.id = p.category_id
+     LEFT JOIN brands b ON b.id = p.brand_id
+     ${whereClause}`,
     params.slice(0, params.length - 2),
   );
 
@@ -112,9 +121,11 @@ router.get(
   requireRole("admin", "super_admin"),
   async (req, res) => {
     const result = await db.query(
-      `SELECT p.*, c.name AS category_name, c.slug AS category_slug
+      `SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+              b.name AS brand_name, b.slug AS brand_slug
        FROM products p
        LEFT JOIN product_categories c ON c.id = p.category_id
+       LEFT JOIN brands b ON b.id = p.brand_id
        WHERE p.id = $1`,
       [req.params.id],
     );
@@ -127,9 +138,11 @@ router.get(
 // GET /api/products/:slug (public — must come after /admin/all)
 router.get("/:slug", async (req, res) => {
   const result = await db.query(
-    `SELECT p.*, c.name AS category_name, c.slug AS category_slug
+    `SELECT p.*, c.name AS category_name, c.slug AS category_slug,
+            b.name AS brand_name, b.slug AS brand_slug
      FROM products p
      LEFT JOIN product_categories c ON c.id = p.category_id
+     LEFT JOIN brands b ON b.id = p.brand_id
      WHERE p.slug = $1 AND p.is_published = TRUE`,
     [req.params.slug],
   );
@@ -148,7 +161,11 @@ router.post(
     { name: "gallery", maxCount: 10 },
   ]),
   verifyImageContentFields,
-  [body("title").trim().notEmpty(), body("categoryId").optional().isInt()],
+  [
+    body("title").trim().notEmpty(),
+    body("categoryId").optional().isInt(),
+    body("brandId").optional().isInt(),
+  ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
@@ -157,6 +174,7 @@ router.post(
     const {
       title: rawTitle,
       categoryId,
+      brandId,
       shortDesc: rawShortDesc,
       description: rawDescription,
       specs,
@@ -187,12 +205,13 @@ router.post(
 
     const result = await db.query(
       `INSERT INTO products
-        (category_id, title, slug, short_desc, description, specs, features,
+        (category_id, brand_id, title, slug, short_desc, description, specs, features,
          image_url, gallery, is_published, is_featured, meta_title, meta_description, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING *`,
       [
         categoryId || null,
+        brandId || null,
         title,
         slug,
         shortDesc || null,
@@ -240,6 +259,7 @@ router.put(
     const {
       title: rawTitle,
       categoryId,
+      brandId,
       shortDesc: rawShortDesc,
       description: rawDescription,
       specs,
@@ -289,13 +309,14 @@ router.put(
 
     const result = await db.query(
       `UPDATE products SET
-       category_id = $1, title = $2, slug = $3, short_desc = $4, description = $5,
-       specs = $6, features = $7, image_url = $8, gallery = $9, is_published = $10,
-       is_featured = $11, meta_title = $12, meta_description = $13
-     WHERE id = $14
+       category_id = $1, brand_id = $2, title = $3, slug = $4, short_desc = $5, description = $6,
+       specs = $7, features = $8, image_url = $9, gallery = $10, is_published = $11,
+       is_featured = $12, meta_title = $13, meta_description = $14
+     WHERE id = $15
      RETURNING *`,
       [
         categoryId || existing.rows[0].category_id,
+        brandId || existing.rows[0].brand_id,
         title || existing.rows[0].title,
         slug,
         shortDesc ?? existing.rows[0].short_desc,
@@ -335,8 +356,6 @@ router.put(
     res.json({ product });
   },
 );
-
-// DELETE /api/products/:id
 
 // DELETE /api/products/:id
 router.delete(
