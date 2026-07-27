@@ -18,7 +18,7 @@ export default function NewsEventsGrid({ posts }) {
               href={`/news/${post.slug}`}
               className="group block"
             >
-              <div className="aspect-square bg-white/5 border-2 border-primary/40 rounded-lg overflow-hidden">
+              <div className="aspect-square bg-white/5 border-2 border-white/40 rounded-lg overflow-hidden">
                 {post.cover_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
