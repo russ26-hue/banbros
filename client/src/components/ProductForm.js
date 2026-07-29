@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ProductForm({
@@ -31,7 +31,20 @@ export default function ProductForm({
   const [keptGalleryUrls, setKeptGalleryUrls] = useState(
     Array.isArray(initialData?.gallery) ? initialData.gallery : [],
   );
-  const [newGalleryFiles, setNewGalleryFiles] = useState([]);
+
+  // Each entry is { file, previewUrl }. The preview URL is created ONCE when
+  // the file is added — never during render. Calling URL.createObjectURL()
+  // inside the JSX would generate a fresh URL on every re-render, which both
+  // leaks memory and behaves unpredictably under React's memoization.
+  const [newGalleryItems, setNewGalleryItems] = useState([]);
+
+  // Release any preview URLs still held when the form unmounts.
+  useEffect(() => {
+    return () => {
+      newGalleryItems.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const initialSpecs = initialData?.specs
     ? Object.entries(initialData.specs).map(([key, value]) => ({ key, value }))
@@ -66,11 +79,19 @@ export default function ProductForm({
   }
 
   function addNewGalleryFiles(fileList) {
-    setNewGalleryFiles((prev) => [...prev, ...Array.from(fileList)]);
+    const additions = Array.from(fileList).map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setNewGalleryItems((prev) => [...prev, ...additions]);
   }
 
   function removeNewGalleryFile(index) {
-    setNewGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewGalleryItems((prev) => {
+      const target = prev[index];
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   async function handleSubmit(e) {
@@ -100,7 +121,7 @@ export default function ProductForm({
     formData.append("features", JSON.stringify(featuresArray));
     if (imageFile) formData.append("image", imageFile);
     formData.append("existingGallery", JSON.stringify(keptGalleryUrls));
-    newGalleryFiles.forEach((file) => formData.append("gallery", file));
+    newGalleryItems.forEach((item) => formData.append("gallery", item.file));
 
     const url =
       mode === "create"
@@ -200,8 +221,8 @@ export default function ProductForm({
           ))}
         </select>
         <p className="text-xs text-text-muted mt-1">
-          Lets visitors browse this brand's products by clicking its logo on the
-          homepage.
+          Lets visitors browse this brand&apos;s products by clicking its logo
+          on the homepage.
         </p>
       </div>
 
@@ -233,7 +254,7 @@ export default function ProductForm({
           </span>
         </label>
 
-        {(keptGalleryUrls.length > 0 || newGalleryFiles.length > 0) && (
+        {(keptGalleryUrls.length > 0 || newGalleryItems.length > 0) && (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-3">
             {keptGalleryUrls.map((url) => (
               <div key={url} className="relative aspect-square group">
@@ -252,11 +273,14 @@ export default function ProductForm({
                 </button>
               </div>
             ))}
-            {newGalleryFiles.map((file, i) => (
-              <div key={i} className="relative aspect-square group">
+            {newGalleryItems.map((item, i) => (
+              <div
+                key={item.previewUrl}
+                className="relative aspect-square group"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={URL.createObjectURL(file)}
+                  src={item.previewUrl}
                   alt="New gallery photo"
                   className="w-full h-full object-cover rounded-lg"
                 />

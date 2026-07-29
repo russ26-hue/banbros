@@ -7,7 +7,24 @@ const sanitizeHtml = require("sanitize-html");
  */
 function sanitizePlainText(input) {
   if (typeof input !== "string") return input;
-  return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} }).trim();
+
+  // Strip all HTML tags first.
+  const stripped = sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {},
+  }).trim();
+
+  // sanitize-html escapes bare characters like & < > " ' into HTML entities.
+  // For plain-text fields that's wrong: the value is rendered as text (React
+  // escapes output automatically), so a stored "&amp;" would display literally
+  // as "&amp;" instead of "&". Decoding here stores the true plain text while
+  // still guaranteeing no markup survived the strip above.
+  return stripped
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
 }
 
 /**

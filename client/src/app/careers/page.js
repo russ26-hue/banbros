@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CareersCollage from "@/components/CareersCollage";
 
 async function getCollage() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cms/careers`, {
@@ -24,21 +25,7 @@ export default async function CareersPage() {
   return (
     <main>
       {/* Collage */}
-      {collageImages.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-            {collageImages.map((url, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={i}
-                src={url}
-                alt={`Banbros team ${i + 1}`}
-                className="w-full aspect-square object-cover rounded-lg"
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <CareersCollage images={collageImages} />
 
       {/* Who is Banbros */}
       <section className="bg-white">
