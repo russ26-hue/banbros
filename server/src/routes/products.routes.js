@@ -5,6 +5,7 @@ const { requireAuth, requireRole } = require("../middleware/auth");
 const {
   makeUploader,
   verifyImageContentFields,
+  compressUploadedImages,
 } = require("../middleware/upload");
 const { uniqueSlug } = require("../utils/slug");
 const {
@@ -161,6 +162,7 @@ router.post(
     { name: "gallery", maxCount: 10 },
   ]),
   verifyImageContentFields,
+  compressUploadedImages,
   [
     body("title").trim().notEmpty(),
     body("categoryId").optional().isInt(),
@@ -254,6 +256,7 @@ router.put(
     { name: "gallery", maxCount: 10 },
   ]),
   verifyImageContentFields,
+  compressUploadedImages,
   async (req, res) => {
     const { id } = req.params;
     const {

@@ -185,11 +185,92 @@ function verifyImageContentFields(req, res, next) {
     });
 }
 
+const sharp = require("sharp");
+
+const MAX_IMAGE_WIDTH = Number(process.env.MAX_IMAGE_WIDTH || 1920);
+const JPEG_QUALITY = Number(process.env.JPEG_QUALITY || 80);
+
+/**
+ * Resizes and re-compresses one uploaded image in place.
+ *
+ * Sharp cannot safely read and write the same path in one pass, so we write
+ * to a temporary file and then replace the original. The image format is
+ * preserved rather than converted, because the public URL is derived from the
+ * stored filename — changing the extension here would break that link.
+ *
+ * Animated GIFs are skipped: resizing them with sharp would flatten them to a
+ * single frame.
+ */
+async function compressOneImage(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".gif") return; // preserve animation
+
+  const tempPath = `${filePath}.tmp`;
+
+  let pipeline = sharp(filePath).rotate(); // honour EXIF orientation
+
+  const metadata = await pipeline.metadata();
+  if (metadata.width && metadata.width > MAX_IMAGE_WIDTH) {
+    pipeline = pipeline.resize({
+      width: MAX_IMAGE_WIDTH,
+      withoutEnlargement: true,
+    });
+  }
+
+  if (ext === ".png") {
+    pipeline = pipeline.png({ compressionLevel: 9 });
+  } else if (ext === ".webp") {
+    pipeline = pipeline.webp({ quality: JPEG_QUALITY });
+  } else {
+    pipeline = pipeline.jpeg({ quality: JPEG_QUALITY, mozjpeg: true });
+  }
+
+  await pipeline.toFile(tempPath);
+  fs.renameSync(tempPath, filePath);
+}
+
+/**
+ * Middleware: compresses every uploaded image on the request, whether it came
+ * from upload.single() (req.file) or upload.fields() (req.files).
+ *
+ * Runs AFTER the content-verification middleware, so only files already
+ * confirmed to be genuine images reach this point.
+ *
+ * Compression failure is deliberately non-fatal: if sharp cannot process a
+ * file, the original upload is kept as-is rather than rejecting the request.
+ * A slightly oversized image is a much better outcome than a failed save.
+ */
+async function compressUploadedImages(req, res, next) {
+  const files = [];
+  if (req.file) files.push(req.file);
+  if (req.files) files.push(...Object.values(req.files).flat());
+
+  if (files.length === 0) return next();
+
+  try {
+    await Promise.all(
+      files.map((file) =>
+        compressOneImage(file.path).catch((err) => {
+          console.error(
+            `Image compression skipped for ${file.filename}:`,
+            err.message,
+          );
+        }),
+      ),
+    );
+  } catch (err) {
+    console.error("Unexpected error during image compression:", err.message);
+  }
+
+  return next();
+}
+
 module.exports = {
   makeUploader,
   makeDocumentUploader,
   verifyImageContent,
   verifyImageContentFields,
   verifyDocumentContent,
+  compressUploadedImages,
   UPLOAD_ROOT,
 };

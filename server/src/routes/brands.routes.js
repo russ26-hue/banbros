@@ -2,7 +2,11 @@ const express = require("express");
 const { body, validationResult } = require("express-validator");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { makeUploader, verifyImageContent } = require("../middleware/upload");
+const {
+  makeUploader,
+  verifyImageContent,
+  compressUploadedImages,
+} = require("../middleware/upload");
 const { uniqueSlug } = require("../utils/slug");
 const { sanitizePlainText, sanitizeUrl } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
@@ -66,6 +70,7 @@ router.post(
   requireRole("admin", "super_admin"),
   upload.single("logo"),
   verifyImageContent,
+  compressUploadedImages,
   [body("name").trim().notEmpty()],
   async (req, res) => {
     const errors = validationResult(req);
@@ -131,6 +136,7 @@ router.put(
   requireRole("admin", "super_admin"),
   upload.single("logo"),
   verifyImageContent,
+  compressUploadedImages,
   async (req, res) => {
     const { id } = req.params;
     const {

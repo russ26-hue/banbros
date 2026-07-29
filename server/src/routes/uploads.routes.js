@@ -1,7 +1,11 @@
 const express = require("express");
 const db = require("../config/db");
 const { requireAuth, requireRole } = require("../middleware/auth");
-const { makeUploader, verifyImageContent } = require("../middleware/upload");
+const {
+  makeUploader,
+  verifyImageContent,
+  compressUploadedImages,
+} = require("../middleware/upload");
 
 const router = express.Router();
 const upload = makeUploader("cms");
@@ -20,6 +24,7 @@ router.post(
   requireRole("admin", "super_admin"),
   upload.single("image"),
   verifyImageContent,
+  compressUploadedImages,
   async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "Image file is required." });
