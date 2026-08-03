@@ -19,6 +19,12 @@ const SECTIONS = [
     description: "Title and subtitle above the featured products grid.",
     href: "/admin/cms/featured-products-heading",
   },
+  {
+    key: "about",
+    label: "About Page",
+    description: "Company description, strategy, mission & vision, and awards.",
+    href: "/admin/cms/about",
+  },
 ];
 
 export default function CmsIndexPage() {
