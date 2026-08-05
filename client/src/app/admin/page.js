@@ -4,7 +4,10 @@ async function getCurrentUser() {
   const cookieStore = await cookies();
   const headersList = await headers();
   const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  // Trust the proxy's forwarded protocol when present (Render and most hosts
+  // set this), and fall back to http. Deriving this from NODE_ENV instead
+  // breaks when running a production build locally, where there is no SSL.
+  const protocol = headersList.get("x-forwarded-proto") || "http";
 
   const res = await fetch(`${protocol}://${host}/api/me`, {
     headers: {
