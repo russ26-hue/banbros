@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { notFound, useParams } from "next/navigation";
+import FileUploadField from "@/components/FileUploadField";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -98,18 +99,31 @@ export default function JobDetailPage() {
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold text-navy mb-4">{job.title}</h1>
 
-      <p className="text-text-muted leading-relaxed mb-6">{job.description}</p>
+      <div
+        className="text-text-muted leading-relaxed mb-6
+          [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2
+          [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-1
+          [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy [&_h2]:mt-4 [&_h2]:mb-2
+          [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-navy [&_h3]:mt-3 [&_h3]:mb-2
+          [&_strong]:font-bold [&_strong]:text-navy [&_em]:italic"
+        dangerouslySetInnerHTML={{ __html: job.description }}
+      />
 
-      {Array.isArray(job.qualifications) && job.qualifications.length > 0 && (
+      {job.qualifications && (
         <div className="mb-10">
           <h2 className="text-lg font-semibold text-navy mb-2">
             Qualifications
           </h2>
-          <ul className="list-disc list-inside text-text-muted space-y-1">
-            {job.qualifications.map((qualification, i) => (
-              <li key={i}>{qualification}</li>
-            ))}
-          </ul>
+          <div
+            className="text-text-muted
+              [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2
+              [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-1
+              [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy [&_h2]:mt-4 [&_h2]:mb-2
+              [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-navy [&_h3]:mt-3 [&_h3]:mb-2
+              [&_strong]:font-bold [&_strong]:text-navy [&_em]:italic
+              [&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic"
+            dangerouslySetInnerHTML={{ __html: job.qualifications }}
+          />
         </div>
       )}
 
@@ -170,17 +184,13 @@ export default function JobDetailPage() {
 
             <div>
               <label className="block text-sm font-medium text-navy mb-1">
-                Resume{" "}
-                <span className="text-text-muted font-normal">
-                  (PDF, DOC, or DOCX)
-                </span>
+                Resume
               </label>
-              <input
-                type="file"
+              <FileUploadField
                 accept=".pdf,.doc,.docx"
-                required
-                onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                className="w-full text-sm"
+                hint="PDF, DOC, or DOCX"
+                buttonText="Upload your resume"
+                onChange={(files) => setResumeFile(files?.[0] || null)}
               />
             </div>
 

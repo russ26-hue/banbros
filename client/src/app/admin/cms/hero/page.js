@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadField from "@/components/FileUploadField";
 
 const emptySlide = {
   eyebrow: "",
@@ -201,12 +202,11 @@ export default function HeroSlidesAdminPage() {
                     className="w-full h-32 object-cover rounded mb-2"
                   />
                 )}
-                <input
-                  type="file"
+                <FileUploadField
                   accept="image/*"
-                  onChange={(e) => handleImageUpload(i, e.target.files?.[0])}
-                  disabled={uploadingIndex === i}
-                  className="w-full text-sm"
+                  hint="Wide images work best (e.g. 1920 × 720)"
+                  buttonText="Upload slide image"
+                  onChange={(files) => handleImageUpload(i, files?.[0])}
                 />
                 {uploadingIndex === i && (
                   <p className="text-xs text-text-muted mt-1">Uploading...</p>

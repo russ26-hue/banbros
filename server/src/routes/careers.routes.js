@@ -8,11 +8,7 @@ const {
   verifyDocumentContent,
 } = require("../middleware/upload");
 const { uniqueSlug } = require("../utils/slug");
-const {
-  sanitizePlainText,
-  sanitizeRichText,
-  sanitizeStringArray,
-} = require("../utils/sanitize");
+const { sanitizePlainText, sanitizeRichText } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
 
 const router = express.Router();
@@ -106,9 +102,10 @@ router.post(
 
     const title = sanitizePlainText(rawTitle);
     const description = sanitizeRichText(rawDescription);
+    // Qualifications is now rich text (HTML) rather than a list of strings.
     const parsedQualifications = qualifications
-      ? sanitizeStringArray(JSON.parse(qualifications))
-      : [];
+      ? sanitizeRichText(qualifications)
+      : null;
 
     const slug = await uniqueSlug(db, "job_postings", title);
 
@@ -183,7 +180,7 @@ router.put(
         slug,
         description ?? existing.rows[0].description,
         qualifications
-          ? sanitizeStringArray(JSON.parse(qualifications))
+          ? sanitizeRichText(qualifications)
           : existing.rows[0].qualifications,
         isActive !== undefined
           ? isActive !== "false"

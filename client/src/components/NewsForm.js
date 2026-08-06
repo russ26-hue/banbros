@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import RichTextEditor from "./RichTextEditor";
+import FileUploadField from "./FileUploadField";
 
 export default function NewsForm({ mode, initialData, postId }) {
   const router = useRouter();
@@ -81,13 +83,7 @@ export default function NewsForm({ mode, initialData, postId }) {
 
       <div>
         <label className="block text-sm font-medium text-navy mb-1">Body</label>
-        <textarea
-          required
-          rows={8}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <RichTextEditor value={body} onChange={setBody} rows={10} />
       </div>
 
       <div>
@@ -102,11 +98,11 @@ export default function NewsForm({ mode, initialData, postId }) {
             className="w-40 h-24 object-cover rounded mb-2"
           />
         )}
-        <input
-          type="file"
+        <FileUploadField
           accept="image/*"
-          onChange={(e) => setCoverImageFile(e.target.files?.[0] || null)}
-          className="w-full text-sm"
+          hint="JPG, PNG, WEBP, or GIF"
+          buttonText="Upload cover image"
+          onChange={(files) => setCoverImageFile(files?.[0] || null)}
         />
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadField from "./FileUploadField";
 
 export default function BrandForm({ mode, initialData, brandId }) {
   const router = useRouter();
@@ -131,11 +132,11 @@ export default function BrandForm({ mode, initialData, brandId }) {
             className="w-24 h-24 object-contain bg-surface rounded p-2 mb-2"
           />
         )}
-        <input
-          type="file"
+        <FileUploadField
           accept="image/*"
-          onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
-          className="w-full text-sm"
+          hint="JPG, PNG, WEBP, or GIF"
+          buttonText="Upload brand logo"
+          onChange={(files) => setLogoFile(files?.[0] || null)}
         />
       </div>
 

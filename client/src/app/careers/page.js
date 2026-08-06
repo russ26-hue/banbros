@@ -69,7 +69,10 @@ export default async function CareersPage() {
                     {job.title}
                   </h3>
                   <p className="text-text-muted text-sm line-clamp-2">
-                    {job.description}
+                    {job.description
+                      ?.replace(/<[^>]*>/g, " ")
+                      .replace(/\s+/g, " ")
+                      .trim()}
                   </p>
                   <span className="inline-block text-primary text-sm font-semibold mt-3">
                     View details & apply →

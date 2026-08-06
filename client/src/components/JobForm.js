@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import RichTextEditor from "./RichTextEditor";
 
 export default function JobForm({ mode, initialData, jobId }) {
   const router = useRouter();
@@ -10,10 +11,8 @@ export default function JobForm({ mode, initialData, jobId }) {
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
-  const [qualificationsText, setQualificationsText] = useState(
-    Array.isArray(initialData?.qualifications)
-      ? initialData.qualifications.join("\n")
-      : "",
+  const [qualifications, setQualifications] = useState(
+    initialData?.qualifications || "",
   );
   const [isActive, setIsActive] = useState(
     initialData?.is_active !== undefined ? initialData.is_active : true,
@@ -27,15 +26,10 @@ export default function JobForm({ mode, initialData, jobId }) {
     setStatus("submitting");
     setErrorMessage("");
 
-    const qualificationsArray = qualificationsText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-
     const payload = {
       title,
       description,
-      qualifications: JSON.stringify(qualificationsArray),
+      qualifications,
       isActive: isActive ? "true" : "false",
     };
 
@@ -86,28 +80,21 @@ export default function JobForm({ mode, initialData, jobId }) {
         <label className="block text-sm font-medium text-navy mb-1">
           Job Description
         </label>
-        <textarea
-          required
-          rows={5}
+        <RichTextEditor
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          onChange={setDescription}
+          rows={8}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-navy mb-1">
-          Qualifications{" "}
-          <span className="text-text-muted font-normal">(one per line)</span>
+          Qualifications
         </label>
-        <textarea
-          rows={5}
-          value={qualificationsText}
-          onChange={(e) => setQualificationsText(e.target.value)}
-          placeholder={
-            "Bachelor's degree in a related field\n2+ years of relevant experience\nStrong communication skills"
-          }
-          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        <RichTextEditor
+          value={qualifications}
+          onChange={setQualifications}
+          rows={8}
         />
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadField from "@/components/FileUploadField";
 
 export default function CareersCollageAdminPage() {
   const router = useRouter();
@@ -126,12 +127,11 @@ export default function CareersCollageAdminPage() {
           <label className="block text-sm font-medium text-navy mb-1">
             Add Photo
           </label>
-          <input
-            type="file"
+          <FileUploadField
             accept="image/*"
-            onChange={(e) => handleAddImage(e.target.files?.[0])}
-            disabled={uploading}
-            className="w-full text-sm"
+            hint="Square photos work best"
+            buttonText="Add a collage photo"
+            onChange={(files) => handleAddImage(files?.[0])}
           />
           {uploading && (
             <p className="text-xs text-text-muted mt-1">Uploading...</p>

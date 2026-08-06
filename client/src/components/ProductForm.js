@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadField from "./FileUploadField";
 
 export default function ProductForm({
   mode,
@@ -238,11 +239,11 @@ export default function ProductForm({
             className="w-24 h-24 object-cover rounded mb-2"
           />
         )}
-        <input
-          type="file"
+        <FileUploadField
           accept="image/*"
-          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-          className="w-full text-sm"
+          hint="JPG, PNG, WEBP, or GIF"
+          buttonText="Upload main image"
+          onChange={(files) => setImageFile(files?.[0] || null)}
         />
       </div>
 
@@ -299,15 +300,12 @@ export default function ProductForm({
           </div>
         )}
 
-        <input
-          type="file"
+        <FileUploadField
           accept="image/*"
           multiple
-          onChange={(e) => {
-            addNewGalleryFiles(e.target.files);
-            e.target.value = "";
-          }}
-          className="w-full text-sm"
+          hint="Select multiple photos at once"
+          buttonText="Upload gallery photos"
+          onChange={(files) => addNewGalleryFiles(files)}
         />
       </div>
 
