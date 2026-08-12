@@ -50,7 +50,7 @@ export default function LoginPage() {
         Admin Login
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit}  method="post" className="space-y-4">
         <div>
           <label
             htmlFor="email"
