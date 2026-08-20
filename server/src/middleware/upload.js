@@ -193,23 +193,38 @@ const JPEG_QUALITY = Number(process.env.JPEG_QUALITY || 80);
 /**
  * Resizes and re-compresses one uploaded image in place.
  *
- * Sharp cannot safely read and write the same path in one pass, so we write
- * to a temporary file and then replace the original. The image format is
- * preserved rather than converted, because the public URL is derived from the
- * stored filename — changing the extension here would break that link.
+ * Photographic PNGs are converted to JPEG, because PNG is lossless and cannot
+ * compress photographs effectively — a 3 MB photo stays roughly 3 MB as PNG
+ * but becomes a few hundred KB as JPEG. PNGs that contain transparency are
+ * left as PNG, since converting those would replace the transparent areas
+ * with a solid background (bad for logos).
  *
- * Animated GIFs are skipped: resizing them with sharp would flatten them to a
- * single frame.
+ * When the format changes, the file is renamed and `file.filename` is updated
+ * in place, because the routes build the public URL from that value.
+ *
+ * Animated GIFs are skipped entirely: resizing them here would flatten them
+ * to a single frame.
  */
-async function compressOneImage(filePath) {
+async function compressOneImage(file) {
+  const filePath = file.path;
   const ext = path.extname(filePath).toLowerCase();
+
   if (ext === ".gif") return; // preserve animation
 
-  const tempPath = `${filePath}.tmp`;
+  const metadata = await sharp(filePath).metadata();
+
+  // hasAlpha tells us the image *can* carry transparency. That is a
+  // conservative check — some opaque PNGs also report true — but erring
+  // toward keeping PNG is safer than flattening a logo onto white.
+  const keepAsPng = ext === ".png" && metadata.hasAlpha;
+
+  const targetExt = keepAsPng ? ".png" : ext === ".webp" ? ".webp" : ".jpg";
+  const changingFormat = targetExt !== ext;
+
+  const tempPath = `${filePath}.tmp${targetExt}`;
 
   let pipeline = sharp(filePath).rotate(); // honour EXIF orientation
 
-  const metadata = await pipeline.metadata();
   if (metadata.width && metadata.width > MAX_IMAGE_WIDTH) {
     pipeline = pipeline.resize({
       width: MAX_IMAGE_WIDTH,
@@ -217,16 +232,31 @@ async function compressOneImage(filePath) {
     });
   }
 
-  if (ext === ".png") {
+  if (targetExt === ".png") {
     pipeline = pipeline.png({ compressionLevel: 9 });
-  } else if (ext === ".webp") {
+  } else if (targetExt === ".webp") {
     pipeline = pipeline.webp({ quality: JPEG_QUALITY });
   } else {
-    pipeline = pipeline.jpeg({ quality: JPEG_QUALITY, mozjpeg: true });
+    // Flatten onto white first: JPEG has no alpha channel, and without this
+    // any transparent pixels would render as black.
+    pipeline = pipeline
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .jpeg({ quality: JPEG_QUALITY, mozjpeg: true });
   }
 
   await pipeline.toFile(tempPath);
-  fs.renameSync(tempPath, filePath);
+
+  if (changingFormat) {
+    const newPath = filePath.replace(new RegExp(`${ext}$`), targetExt);
+    fs.renameSync(tempPath, newPath);
+    fs.unlinkSync(filePath); // remove the original, now-unused file
+
+    // The routes derive the public URL from these, so they must be updated.
+    file.path = newPath;
+    file.filename = path.basename(newPath);
+  } else {
+    fs.renameSync(tempPath, filePath);
+  }
 }
 
 /**
@@ -250,7 +280,7 @@ async function compressUploadedImages(req, res, next) {
   try {
     await Promise.all(
       files.map((file) =>
-        compressOneImage(file.path).catch((err) => {
+        compressOneImage(file).catch((err) => {
           console.error(
             `Image compression skipped for ${file.filename}:`,
             err.message,
