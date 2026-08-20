@@ -51,7 +51,7 @@ export default function HeroCarousel({ slides }) {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(to right, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 18%, rgba(255,255,255,0) 82%, rgba(255,255,255,0.85) 100%)",
+                  "linear-gradient(to right, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,0.4) 100%)",
               }}
             />
 
