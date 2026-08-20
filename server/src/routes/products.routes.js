@@ -98,20 +98,76 @@ router.get("/categories", async (req, res) => {
 // NOTE: /admin/all must be registered BEFORE the generic GET /:slug
 // route below, otherwise Express would match "admin" as a :slug value.
 
-// GET /api/products/admin/all - includes unpublished, for the dashboard
+// GET /api/products/admin/all - includes unpublished, for the dashboard.
+// Supports search, category/brand filtering, and pagination so the list
+// stays usable with thousands of products.
 router.get(
   "/admin/all",
   requireAuth,
   requireRole("admin", "super_admin"),
   async (req, res) => {
+    const { search, category, brand, status, page = 1, limit = 25 } = req.query;
+
+    const conditions = [];
+    const params = [];
+
+    if (search) {
+      params.push(`%${search}%`);
+      conditions.push(
+        `(p.title ILIKE $${params.length} OR p.short_desc ILIKE $${params.length})`,
+      );
+    }
+    if (category) {
+      params.push(category);
+      conditions.push(`c.slug = $${params.length}`);
+    }
+    if (brand) {
+      params.push(brand);
+      conditions.push(`b.slug = $${params.length}`);
+    }
+    if (status === "published") {
+      conditions.push("p.is_published = TRUE");
+    } else if (status === "draft") {
+      conditions.push("p.is_published = FALSE");
+    } else if (status === "featured") {
+      conditions.push("p.is_featured = TRUE");
+    }
+
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
+
+    const safeLimit = Math.min(Number(limit) || 25, 100);
+    const offset = (Math.max(1, Number(page)) - 1) * safeLimit;
+
+    params.push(safeLimit, offset);
+
     const result = await db.query(
       `SELECT p.id, p.title, p.slug, p.is_published, p.is_featured, p.image_url,
-            c.name AS category_name, p.updated_at
-     FROM products p
-     LEFT JOIN product_categories c ON c.id = p.category_id
-     ORDER BY p.updated_at DESC`,
+              c.name AS category_name, b.name AS brand_name, p.updated_at
+       FROM products p
+       LEFT JOIN product_categories c ON c.id = p.category_id
+       LEFT JOIN brands b ON b.id = p.brand_id
+       ${whereClause}
+       ORDER BY p.updated_at DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params,
     );
-    res.json({ products: result.rows });
+
+    const countResult = await db.query(
+      `SELECT COUNT(*) FROM products p
+       LEFT JOIN product_categories c ON c.id = p.category_id
+       LEFT JOIN brands b ON b.id = p.brand_id
+       ${whereClause}`,
+      params.slice(0, params.length - 2),
+    );
+
+    res.json({
+      products: result.rows,
+      total: Number(countResult.rows[0].count),
+      page: Number(page),
+      limit: safeLimit,
+    });
   },
 );
 
