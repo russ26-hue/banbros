@@ -63,7 +63,9 @@ export default async function AdminProductsPage({ searchParams }) {
     getBrands(),
   ]);
 
-  const { products, total, limit } = productsData;
+  const products = productsData.products || [];
+  const total = productsData.total ?? products.length;
+  const limit = productsData.limit || 25;
   const totalPages = Math.ceil(total / limit);
 
   // Build a URL that preserves the current filters but changes the page.
