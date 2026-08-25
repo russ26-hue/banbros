@@ -64,7 +64,7 @@ export default async function AboutPage() {
               </h1>
             )}
             {company.body && (
-              <p className="text-text-muted leading-relaxed whitespace-pre-line">
+              <p className="text-text-muted leading-relaxed whitespace-pre-line text-justify">
                 {company.body}
               </p>
             )}
@@ -82,7 +82,7 @@ export default async function AboutPage() {
               </h2>
             )}
             {strategy.body && (
-              <p className="text-text-muted leading-relaxed whitespace-pre-line">
+              <p className="text-text-muted leading-relaxed whitespace-pre-line text-justify">
                 {strategy.body}
               </p>
             )}
@@ -100,7 +100,7 @@ export default async function AboutPage() {
                   <h2 className="text-xl font-bold text-navy mb-3">
                     Our Mission
                   </h2>
-                  <p className="text-text-muted leading-relaxed whitespace-pre-line">
+                  <p className="text-text-muted leading-relaxed whitespace-pre-line text-justify">
                     {missionVision.mission}
                   </p>
                 </div>
@@ -110,7 +110,7 @@ export default async function AboutPage() {
                   <h2 className="text-xl font-bold text-navy mb-3">
                     Our Vision
                   </h2>
-                  <p className="text-text-muted leading-relaxed whitespace-pre-line">
+                  <p className="text-text-muted leading-relaxed whitespace-pre-line text-justify">
                     {missionVision.vision}
                   </p>
                 </div>
