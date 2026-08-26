@@ -145,7 +145,11 @@ export default async function AuditLogsPage({ searchParams }) {
             {logs.map((log) => (
               <tr key={log.id} className="border-t border-border align-top">
                 <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                  {new Date(log.created_at).toLocaleString()}
+                  {new Date(log.created_at).toLocaleString("en-PH", {
+                    timeZone: "Asia/Manila",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
                 </td>
                 <td className="px-4 py-3 text-navy">{log.user_email || "—"}</td>
                 <td className="px-4 py-3">
