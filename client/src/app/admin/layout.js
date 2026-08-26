@@ -40,7 +40,10 @@ export default async function AdminLayout({ children }) {
     { label: "Contact", href: "/admin/contact" },
     { label: "CMS Content", href: "/admin/cms" },
     ...(isSuperAdmin
-      ? [{ label: "Admin Management", href: "/admin/users" }]
+      ? [
+          { label: "Admin Management", href: "/admin/users" },
+          { label: "Activity Log", href: "/admin/audit-logs" },
+        ]
       : []),
   ];
 

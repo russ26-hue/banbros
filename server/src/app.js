@@ -13,6 +13,7 @@ const cmsRoutes = require("./routes/cms.routes");
 const contactRoutes = require("./routes/contact.routes");
 const brandsRoutes = require("./routes/brands.routes");
 const uploadsRoutes = require("./routes/uploads.routes");
+const auditLogsRoutes = require("./routes/auditLogs.routes");
 const careersRoutes = require("./routes/careers.routes");
 
 const app = express();
@@ -99,6 +100,7 @@ app.use("/api/cms", cmsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/brands", brandsRoutes);
 app.use("/api/uploads", uploadsRoutes);
+app.use("/api/audit-logs", auditLogsRoutes);
 app.use("/api/careers", careersRoutes);
 
 // -------------------- 404 --------------------
