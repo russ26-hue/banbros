@@ -81,6 +81,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // -------------------- Static file serving for uploaded images --------------------
+// Uploaded images are public by design — they appear on the public website.
+// Resumes are NOT: they contain applicants' personal data and must only be
+// reachable by an authenticated admin, via GET /api/careers/resumes/:filename.
+app.use("/uploads/resumes", (req, res) => {
+  res.status(404).json({ error: "Not found." });
+});
+
 app.use(
   "/uploads",
   express.static(
