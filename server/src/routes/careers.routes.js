@@ -10,6 +10,9 @@ const {
 const { uniqueSlug } = require("../utils/slug");
 const { sanitizePlainText, sanitizeRichText } = require("../utils/sanitize");
 const { logAudit } = require("../utils/auditLog");
+const path = require("path");
+const fs = require("fs");
+const { UPLOAD_ROOT } = require("../middleware/upload");
 
 const router = express.Router();
 const resumeUploader = makeDocumentUploader("resumes");
@@ -66,6 +69,48 @@ router.get(
     if (result.rows.length === 0)
       return res.status(404).json({ error: "Job posting not found." });
     res.json({ job: result.rows[0] });
+  },
+);
+
+// GET /api/careers/resumes/:filename - serves an applicant's resume to an
+// authenticated admin. Resumes are deliberately excluded from public static
+// file serving because they contain personal data.
+router.get(
+  "/resumes/:filename",
+  requireAuth,
+  requireRole("admin", "super_admin"),
+  async (req, res) => {
+    const { filename } = req.params;
+
+    // Reject anything that is not a plain filename. Without this, a value
+    // like "../../.env" would let an authenticated user read arbitrary files.
+    if (!/^[A-Za-z0-9._-]+$/.test(filename) || filename.includes("..")) {
+      return res.status(400).json({ error: "Invalid filename." });
+    }
+
+    const filePath = path.join(UPLOAD_ROOT, "resumes", filename);
+
+    // Confirm the resolved path is still inside the resumes directory, as a
+    // second line of defence against path traversal.
+    const resumesDir = path.join(UPLOAD_ROOT, "resumes");
+    if (!filePath.startsWith(resumesDir)) {
+      return res.status(400).json({ error: "Invalid filename." });
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Resume not found." });
+    }
+
+    await logAudit({
+      userId: req.user.id,
+      userEmail: req.user.email,
+      action: "resume_download",
+      resource: "job_application",
+      details: { filename },
+      req,
+    });
+
+    return res.sendFile(filePath);
   },
 );
 

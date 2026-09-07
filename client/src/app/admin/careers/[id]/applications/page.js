@@ -100,7 +100,7 @@ export default async function JobApplicationsPage({ params }) {
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <a
-                    href={app.resume_url}
+                    href={`/api/admin/resumes/${app.resume_url.split("/").pop()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary font-semibold hover:underline"
