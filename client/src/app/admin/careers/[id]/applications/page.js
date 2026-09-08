@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getJob(id) {
   const cookieStore = await cookies();
@@ -96,7 +97,7 @@ export default async function JobApplicationsPage({ params }) {
                   {app.cover_letter || "—"}
                 </td>
                 <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                  {new Date(app.submitted_at).toLocaleDateString()}
+                  <FormattedDate value={app.submitted_at} withTime />
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <a

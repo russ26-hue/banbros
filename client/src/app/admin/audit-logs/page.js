@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import AuditLogFilterBar from "@/components/AuditLogFilterBar";
+import FormattedDate from "@/components/FormattedDate";
 
 async function fetchWithAuth(url) {
   const cookieStore = await cookies();
@@ -145,11 +146,7 @@ export default async function AuditLogsPage({ searchParams }) {
             {logs.map((log) => (
               <tr key={log.id} className="border-t border-border align-top">
                 <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                  {new Date(log.created_at).toLocaleString("en-PH", {
-                    timeZone: "Asia/Manila",
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
+                  <FormattedDate value={log.created_at} withTime />
                 </td>
                 <td className="px-4 py-3 text-navy">{log.user_email || "—"}</td>
                 <td className="px-4 py-3">

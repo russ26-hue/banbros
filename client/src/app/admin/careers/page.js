@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import DeleteJobButton from "@/components/DeleteJobButton";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getJobs() {
   const cookieStore = await cookies();
@@ -65,7 +66,7 @@ export default async function AdminCareersPage() {
                 <td className="px-4 py-3 text-navy font-medium">{job.title}</td>
                 <td className="px-4 py-3">{job.is_active ? "✅" : "—"}</td>
                 <td className="px-4 py-3 text-text-muted">
-                  {new Date(job.updated_at).toLocaleDateString()}
+                  <FormattedDate value={job.updated_at} />
                 </td>
                 <td className="px-4 py-3 text-right space-x-3">
                   <Link

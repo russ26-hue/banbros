@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import DeleteNewsButton from "@/components/DeleteNewsButton";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getPosts() {
   const cookieStore = await cookies();
@@ -57,12 +58,10 @@ export default async function AdminNewsPage() {
                 </td>
                 <td className="px-4 py-3">{post.is_published ? "✅" : "—"}</td>
                 <td className="px-4 py-3 text-text-muted">
-                  {post.published_at
-                    ? new Date(post.published_at).toLocaleDateString()
-                    : "—"}
+                  <FormattedDate value={post.published_at} />
                 </td>
                 <td className="px-4 py-3 text-text-muted">
-                  {new Date(post.updated_at).toLocaleDateString()}
+                  <FormattedDate value={post.updated_at} />
                 </td>
                 <td className="px-4 py-3 text-right space-x-3">
                   <Link

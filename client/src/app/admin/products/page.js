@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import DeleteProductButton from "@/components/DeleteProductButton";
 import AdminProductsFilterBar from "@/components/AdminProductsFilterBar";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getProducts({ search, category, brand, status, page }) {
   const cookieStore = await cookies();
@@ -159,7 +160,7 @@ export default async function AdminProductsPage({ searchParams }) {
                   {product.is_published ? "✅" : "—"}
                 </td>
                 <td className="px-4 py-3 text-text-muted whitespace-nowrap">
-                  {new Date(product.updated_at).toLocaleDateString()}
+                  <FormattedDate value={product.updated_at} />
                 </td>
                 <td className="px-4 py-3 text-right space-x-3 whitespace-nowrap">
                   <Link

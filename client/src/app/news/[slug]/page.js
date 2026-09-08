@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getPost(slug) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${slug}`, {
@@ -36,14 +37,6 @@ export default async function NewsDetailPage({ params }) {
     author_name: authorName,
   } = post;
 
-  const formattedDate = publishedAt
-    ? new Date(publishedAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : null;
-
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {coverImageUrl && (
@@ -61,8 +54,8 @@ export default async function NewsDetailPage({ params }) {
 
       <div className="flex items-center gap-2 text-sm text-text-muted mb-8">
         {authorName && <span>{authorName}</span>}
-        {authorName && formattedDate && <span>&middot;</span>}
-        {formattedDate && <span>{formattedDate}</span>}
+        {authorName && publishedAt && <span>&middot;</span>}
+        {publishedAt && <FormattedDate value={publishedAt} />}
       </div>
 
       {body && (
