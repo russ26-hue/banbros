@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import MarkReadButton from "@/components/MarkReadButton";
+import FormattedDate from "@/components/FormattedDate";
 
 async function getSubmissions() {
   const cookieStore = await cookies();
@@ -59,7 +60,7 @@ export default async function AdminContactPage() {
                 )}
               </div>
               <p className="text-xs text-text-muted whitespace-nowrap">
-                {new Date(submission.created_at).toLocaleString()}
+                <FormattedDate value={submission.created_at} withTime />
               </p>
             </div>
 
