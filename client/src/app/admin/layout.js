@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminLogoutButton from "@/components/AdminLogoutButton";
+import NotificationBell from "@/components/NotificationBell";
 
 async function getCurrentUser() {
   const cookieStore = await cookies();
@@ -74,7 +75,10 @@ export default async function AdminLayout({ children }) {
               {user.role.replace("_", " ")}
             </p>
           </div>
-          <AdminLogoutButton />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <AdminLogoutButton />
+          </div>
         </header>
 
         <main className="flex-1 p-6">{children}</main>
