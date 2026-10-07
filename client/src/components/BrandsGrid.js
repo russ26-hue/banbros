@@ -1,18 +1,50 @@
 import Link from "next/link";
 
-function BrandTile({ brand }) {
+function BrandLogo({ brand }) {
   return (
-    <Link
-      href={`/products?brand=${brand.slug}`}
-      className="flex items-center justify-center h-20 p-3"
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={brand.logo_url}
-        alt={brand.name}
-        className="max-h-full max-w-full object-contain transition-transform duration-200 hover:scale-110"
-      />
-    </Link>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={brand.logo_url}
+      alt={brand.name}
+      className="max-h-full max-w-full object-contain transition-transform duration-200 hover:scale-110"
+    />
+  );
+}
+
+function BrandTile({ brand }) {
+  const hasProducts = (brand.product_count || 0) > 0;
+  const tileClass = "flex items-center justify-center h-20 p-3";
+
+  // Brands with products link to their filtered catalogue. Brands without
+  // would land on an empty results page, so those fall back to the brand's
+  // own website instead.
+  if (hasProducts) {
+    return (
+      <Link href={`/products?brand=${brand.slug}`} className={tileClass}>
+        <BrandLogo brand={brand} />
+      </Link>
+    );
+  }
+
+  if (brand.website_url) {
+    return (
+      <a
+        href={brand.website_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={tileClass}
+      >
+        <BrandLogo brand={brand} />
+      </a>
+    );
+  }
+
+  // No products and no website: show the logo without making it clickable,
+  // rather than linking somewhere that leads nowhere useful.
+  return (
+    <div className={tileClass}>
+      <BrandLogo brand={brand} />
+    </div>
   );
 }
 
@@ -43,9 +75,7 @@ export default function BrandsGrid({ brands }) {
           <h2 className="text-2xl sm:text-3xl font-bold text-navy">Brands</h2>
         </div>
 
-        {/* Stacks on mobile, splits into two columns from md upward.
-            The divider is a left border on the second column so it only
-            appears when the columns are actually side by side. */}
+        {/* Stacks on mobile, splits into two columns from md upward. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 md:gap-y-0 md:gap-x-10">
           <div className={hasBoth ? "md:pr-10" : ""}>
             <BrandColumn brands={corporateBrands} />

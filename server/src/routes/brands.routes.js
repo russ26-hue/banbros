@@ -21,13 +21,21 @@ function toPublicUrl(req, filename) {
 
 // -------------------- PUBLIC ROUTES --------------------
 
-// GET /api/brands - active brands, ordered for homepage display
+// GET /api/brands - active brands, ordered for homepage display.
+//
+// product_count lets the homepage decide where a logo should link: brands with
+// products go to the filtered catalogue, brands without fall back to their own
+// website. Only published products are counted, so an unpublished draft does
+// not send visitors to an empty results page.
 router.get("/", async (req, res) => {
   const result = await db.query(
-    `SELECT id, name, slug, logo_url, website_url, division
-     FROM brands
-     WHERE is_active = TRUE
-     ORDER BY sort_order ASC, name ASC`,
+    `SELECT b.id, b.name, b.slug, b.logo_url, b.website_url, b.division,
+            COUNT(p.id)::int AS product_count
+     FROM brands b
+     LEFT JOIN products p ON p.brand_id = b.id AND p.is_published = TRUE
+     WHERE b.is_active = TRUE
+     GROUP BY b.id
+     ORDER BY b.sort_order ASC, b.name ASC`,
   );
   res.json({ brands: result.rows });
 });
