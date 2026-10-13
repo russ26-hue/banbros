@@ -35,6 +35,7 @@ export default async function AdminLayout({ children }) {
 
   const navItems = [
     { label: "Products", href: "/admin/products" },
+    { label: "Solutions", href: "/admin/solutions" },
     { label: "Brands", href: "/admin/brands" },
     { label: "News", href: "/admin/news" },
     { label: "Careers", href: "/admin/careers" },

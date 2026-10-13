@@ -16,6 +16,7 @@ const uploadsRoutes = require("./routes/uploads.routes");
 const auditLogsRoutes = require("./routes/auditLogs.routes");
 const careersRoutes = require("./routes/careers.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
+const solutionsRoutes = require("./routes/solutions.routes");
 
 const app = express();
 
@@ -111,6 +112,7 @@ app.use("/api/uploads", uploadsRoutes);
 app.use("/api/audit-logs", auditLogsRoutes);
 app.use("/api/careers", careersRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/solutions", solutionsRoutes);
 
 // -------------------- 404 --------------------
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found." }));
