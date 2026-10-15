@@ -47,11 +47,15 @@ export default function ProductForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const initialSpecs = initialData?.specs
-    ? Object.entries(initialData.specs).map(([key, value]) => ({ key, value }))
-    : [];
-  const [specs, setSpecs] = useState(
-    initialSpecs.length > 0 ? initialSpecs : [{ key: "", value: "" }],
+  // Specs are stored as a JSON object but edited as plain text, one
+  // "Key: Value" pair per line, which is far quicker to fill in than
+  // separate inputs for each row.
+  const [specsText, setSpecsText] = useState(
+    initialData?.specs
+      ? Object.entries(initialData.specs)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n")
+      : "",
   );
 
   const [featuresText, setFeaturesText] = useState(
@@ -60,20 +64,6 @@ export default function ProductForm({
 
   const [status, setStatus] = useState("idle"); // idle | submitting | error
   const [errorMessage, setErrorMessage] = useState("");
-
-  function updateSpecRow(index, field, value) {
-    setSpecs((prev) =>
-      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
-    );
-  }
-
-  function addSpecRow() {
-    setSpecs((prev) => [...prev, { key: "", value: "" }]);
-  }
-
-  function removeSpecRow(index) {
-    setSpecs((prev) => prev.filter((_, i) => i !== index));
-  }
 
   function removeExistingGalleryPhoto(url) {
     setKeptGalleryUrls((prev) => prev.filter((u) => u !== url));
@@ -100,9 +90,15 @@ export default function ProductForm({
     setStatus("submitting");
     setErrorMessage("");
 
+    // Split on the first colon only, so values containing colons
+    // (e.g. "1920x1080 @ 144Hz: tested") survive intact.
     const specsObject = {};
-    specs.forEach(({ key, value }) => {
-      if (key.trim()) specsObject[key.trim()] = value;
+    specsText.split("\n").forEach((line) => {
+      const separatorIndex = line.indexOf(":");
+      if (separatorIndex === -1) return;
+      const key = line.slice(0, separatorIndex).trim();
+      const value = line.slice(separatorIndex + 1).trim();
+      if (key) specsObject[key] = value;
     });
 
     const featuresArray = featuresText
@@ -310,43 +306,22 @@ export default function ProductForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-navy mb-2">
-          Specifications
+        <label className="block text-sm font-medium text-navy mb-1">
+          Specifications{" "}
+          <span className="text-text-muted font-normal">
+            (one per line, as Key: Value)
+          </span>
         </label>
-        <div className="space-y-2">
-          {specs.map((row, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Key (e.g. CPU)"
-                value={row.key}
-                onChange={(e) => updateSpecRow(i, "key", e.target.value)}
-                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <input
-                type="text"
-                placeholder="Value (e.g. Intel i5)"
-                value={row.value}
-                onChange={(e) => updateSpecRow(i, "value", e.target.value)}
-                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={() => removeSpecRow(i)}
-                className="text-red-600 text-sm font-semibold px-2"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={addSpecRow}
-          className="mt-2 text-sm text-primary font-semibold hover:underline"
-        >
-          + Add Spec
-        </button>
+        <textarea
+          rows={6}
+          value={specsText}
+          onChange={(e) => setSpecsText(e.target.value)}
+          placeholder={"CPU: Intel i5\nRAM: 16GB\nStorage: 512GB SSD"}
+          className="w-full border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <p className="text-xs text-text-muted mt-1">
+          Lines without a colon are ignored.
+        </p>
       </div>
 
       <div>
