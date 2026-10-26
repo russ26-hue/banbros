@@ -55,12 +55,12 @@ export default async function Home() {
     <main>
       <HeroCarousel slides={sections.hero?.slides || []} />
       <PurposeSection content={sections.purpose_statement} />
+      <NewsEventsGrid posts={latestNews} />
+      <BrandsGrid brands={brands} />
       <FeaturedProducts
         heading={sections.featured_products_heading}
         products={featuredProducts}
       />
-      <BrandsGrid brands={brands} />
-      <NewsEventsGrid posts={latestNews} />
     </main>
   );
 }
