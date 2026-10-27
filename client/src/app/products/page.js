@@ -32,6 +32,83 @@ async function getProducts({ category, brand, search, page }) {
   return res.json();
 }
 
+// Builds a /products URL that keeps the current filters but changes the page.
+function pageHref({ pageNum, category, brand, search }) {
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (brand) params.set("brand", brand);
+  if (search) params.set("search", search);
+  if (pageNum > 1) params.set("page", String(pageNum));
+  return `/products${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function Pagination({ page, totalPages, category, brand, search }) {
+  const linkFor = (pageNum) => pageHref({ pageNum, category, brand, search });
+
+  const baseClass =
+    "px-3 py-2 rounded-lg text-sm font-semibold transition-colors";
+  const inactiveClass = `${baseClass} bg-white border border-border text-navy hover:bg-surface`;
+  const activeClass = `${baseClass} bg-primary text-white`;
+
+  // Show a window of pages around the current one. Listing every page is
+  // unusable once there are dozens of them.
+  const windowSize = 2;
+  const pages = [];
+  for (
+    let i = Math.max(1, page - windowSize);
+    i <= Math.min(totalPages, page + windowSize);
+    i++
+  ) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center items-center gap-2 mt-10">
+      {page > 1 && (
+        <Link href={linkFor(page - 1)} className={inactiveClass}>
+          ‹ Previous
+        </Link>
+      )}
+
+      {pages[0] > 1 && (
+        <>
+          <Link href={linkFor(1)} className={inactiveClass}>
+            1
+          </Link>
+          {pages[0] > 2 && <span className="text-text-muted px-1">…</span>}
+        </>
+      )}
+
+      {pages.map((pageNum) => (
+        <Link
+          key={pageNum}
+          href={linkFor(pageNum)}
+          className={pageNum === page ? activeClass : inactiveClass}
+        >
+          {pageNum}
+        </Link>
+      ))}
+
+      {pages[pages.length - 1] < totalPages && (
+        <>
+          {pages[pages.length - 1] < totalPages - 1 && (
+            <span className="text-text-muted px-1">…</span>
+          )}
+          <Link href={linkFor(totalPages)} className={inactiveClass}>
+            {totalPages}
+          </Link>
+        </>
+      )}
+
+      {page < totalPages && (
+        <Link href={linkFor(page + 1)} className={inactiveClass}>
+          Next ›
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export default async function ProductsPage({ searchParams }) {
   const params = await searchParams;
   const category = params?.category || "";
@@ -73,31 +150,13 @@ export default async function ProductsPage({ searchParams }) {
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-10">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (pageNum) => {
-              const linkParams = new URLSearchParams();
-              if (category) linkParams.set("category", category);
-              if (brand) linkParams.set("brand", brand);
-              if (search) linkParams.set("search", search);
-              if (pageNum > 1) linkParams.set("page", pageNum.toString());
-              const href = `/products${linkParams.toString() ? `?${linkParams.toString()}` : ""}`;
-              const isActive = pageNum === page;
-              const activeClass = "bg-primary text-white";
-              const inactiveClass =
-                "bg-white border border-border text-navy hover:bg-surface";
-              const linkClass =
-                "px-4 py-2 rounded-lg text-sm font-semibold transition-colors " +
-                (isActive ? activeClass : inactiveClass);
-
-              return (
-                <Link key={pageNum} href={href} className={linkClass}>
-                  {pageNum}
-                </Link>
-              );
-            },
-          )}
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          category={category}
+          brand={brand}
+          search={search}
+        />
       )}
     </main>
   );

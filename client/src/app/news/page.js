@@ -1,4 +1,5 @@
 import NewsCard from "@/components/NewsCard";
+import Link from "next/link";
 
 async function getNews(page) {
   const res = await fetch(
@@ -9,6 +10,73 @@ async function getNews(page) {
   );
   if (!res.ok) throw new Error("Failed to fetch news");
   return res.json();
+}
+
+function Pagination({ page, totalPages }) {
+  const linkFor = (pageNum) =>
+    pageNum > 1 ? `/news?page=${pageNum}` : "/news";
+
+  const baseClass =
+    "px-3 py-2 rounded-lg text-sm font-semibold transition-colors";
+  const inactiveClass = `${baseClass} bg-white border border-border text-navy hover:bg-surface`;
+  const activeClass = `${baseClass} bg-primary text-white`;
+
+  // Show a window of pages around the current one rather than every page.
+  const windowSize = 2;
+  const pages = [];
+  for (
+    let i = Math.max(1, page - windowSize);
+    i <= Math.min(totalPages, page + windowSize);
+    i++
+  ) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center items-center gap-2 mt-10">
+      {page > 1 && (
+        <Link href={linkFor(page - 1)} className={inactiveClass}>
+          ‹ Previous
+        </Link>
+      )}
+
+      {pages[0] > 1 && (
+        <>
+          <Link href={linkFor(1)} className={inactiveClass}>
+            1
+          </Link>
+          {pages[0] > 2 && <span className="text-text-muted px-1">…</span>}
+        </>
+      )}
+
+      {pages.map((pageNum) => (
+        <Link
+          key={pageNum}
+          href={linkFor(pageNum)}
+          className={pageNum === page ? activeClass : inactiveClass}
+        >
+          {pageNum}
+        </Link>
+      ))}
+
+      {pages[pages.length - 1] < totalPages && (
+        <>
+          {pages[pages.length - 1] < totalPages - 1 && (
+            <span className="text-text-muted px-1">…</span>
+          )}
+          <Link href={linkFor(totalPages)} className={inactiveClass}>
+            {totalPages}
+          </Link>
+        </>
+      )}
+
+      {page < totalPages && (
+        <Link href={linkFor(page + 1)} className={inactiveClass}>
+          Next ›
+        </Link>
+      )}
+    </div>
+  );
 }
 
 export default async function NewsPage({ searchParams }) {
@@ -37,25 +105,7 @@ export default async function NewsPage({ searchParams }) {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-10">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (pageNum) => (
-              <a
-                key={pageNum}
-                href={pageNum > 1 ? `/news?page=${pageNum}` : "/news"}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  pageNum === page
-                    ? "bg-primary text-white"
-                    : "bg-white border border-border text-navy hover:bg-surface"
-                }`}
-              >
-                {pageNum}
-              </a>
-            ),
-          )}
-        </div>
-      )}
+      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} />}
     </main>
   );
 }
